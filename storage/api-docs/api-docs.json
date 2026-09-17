@@ -1,0 +1,5066 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Hotel Management System API",
+        "description": "REST API for the Hotel Management System capstone project — rooms, bookings, payments, staff operations and reports.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://myapp.test",
+            "description": "Local Development Server"
+        }
+    ],
+    "paths": {
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new user (sends an OTP to email)",
+                "operationId": "fb50936b77820c848e440341824401c8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Rojin Mohammad"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User created, OTP sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "user_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/verify-otp": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify the OTP code sent to the user's email",
+                "operationId": "a344eddea5f1c3f4573392f1730094ab",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified successfully"
+                    },
+                    "400": {
+                        "description": "Invalid OTP"
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Log in and receive a JWT access token",
+                "operationId": "d015f6348abb3341668f30861fee5031",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Log out (invalidate the current JWT)",
+                "operationId": "1d338396554f20215fbe83deea53134e",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully"
+                    },
+                    "500": {
+                        "description": "Failed to logout"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get the currently authenticated user",
+                "operationId": "4ade91f17f808c0118105cf1b63f4a91",
+                "responses": {
+                    "200": {
+                        "description": "Current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/amenities": {
+            "get": {
+                "tags": [
+                    "Amenities"
+                ],
+                "summary": "List all amenities",
+                "operationId": "7fcff321b1d9bf1717fa2401bd111c14",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Amenity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Amenities"
+                ],
+                "summary": "Create an amenity",
+                "operationId": "12af58ebf4855edaf2bd3a017d08450f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Amenity"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/amenities/{amenity}": {
+            "get": {
+                "tags": [
+                    "Amenities"
+                ],
+                "summary": "Get a single amenity",
+                "operationId": "feac6497d35156ba19e6ebf22c104c0f",
+                "parameters": [
+                    {
+                        "name": "amenity",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Amenity"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Amenities"
+                ],
+                "summary": "Update an amenity",
+                "operationId": "b8bb6b4f8b156f1b7b489596b52d06b8",
+                "parameters": [
+                    {
+                        "name": "amenity",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Amenity"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Amenities"
+                ],
+                "summary": "Delete an amenity",
+                "operationId": "2fd63e0d458bba47790a865c6a698234",
+                "parameters": [
+                    {
+                        "name": "amenity",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/roles": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "List all roles",
+                "operationId": "faed83048c9dd9c0156f0cf4310cabb3",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Role"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Create a role",
+                "operationId": "9accd9bcdf589defa850d6d70582c519",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Role"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/roles/{role}": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Get a role (with its permissions loaded)",
+                "operationId": "0658f858682f2971ab4cdb3c9d48cc35",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Role"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Update a role",
+                "operationId": "dcdc191e5662c76ef05308a50896245f",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Role"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Delete a role",
+                "operationId": "71ef250a2cd1b9eeb944f0f606ceb4a3",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/permissions": {
+            "get": {
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "List all permissions",
+                "operationId": "8199afde7a182f462e2c542438e91b56",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Permission"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Create a permission",
+                "operationId": "8c6211c3eb713fd789c1512f4dec9f3d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Permission"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/permissions/{permission}": {
+            "get": {
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Get a single permission",
+                "operationId": "641efe5783d3ce6f19f856bb2f0d9558",
+                "parameters": [
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Permission"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Update a permission",
+                "operationId": "4becf3243ee85dd20109375b1ba603f1",
+                "parameters": [
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Permission"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Delete a permission",
+                "operationId": "a68605f67e42eedb4c42d63efa04c0d0",
+                "parameters": [
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "List all users (with role loaded)",
+                "operationId": "74b3157b2fc4a9bd978f915b420c2e1f",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/User"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create a user",
+                "operationId": "306e8dc1108ffc815a8c6a1694eed125",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "full_name",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "role_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "full_name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{user}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get a single user (with role loaded)",
+                "operationId": "b29750dd318ea066d95f5b12c13cf089",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update a user (password re-hashed if provided)",
+                "operationId": "0ec758d9af601fe984779e2cfd4b962a",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "full_name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete a user",
+                "operationId": "95aa304052cb370b89fbb642719f5da7",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/invoices": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "List all invoices (with booking loaded)",
+                "operationId": "9106068488e4d71a58a712c6a4afdf88",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Invoice"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Create an invoice",
+                "operationId": "9818c9519dc0ec165b8e0091d4524d38",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "booking_id"
+                                ],
+                                "properties": {
+                                    "booking_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "room_charge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "services_charge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "total_amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "issued_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/invoices/{invoice}": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get a single invoice (with booking + payments loaded)",
+                "operationId": "5aa0aff5f479348233b0279ec63eb0dd",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Update an invoice",
+                "operationId": "35c25fd5a0709b3856efb870ba472d42",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "room_charge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "services_charge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "total_amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Delete an invoice",
+                "operationId": "610a5f3bc00203692a2a1c48be7e4fc6",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/reviews": {
+            "get": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "List all reviews (with booking + user loaded)",
+                "operationId": "953c931254cd5bc6ce8170f01ecf3912",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Review"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Create a review (booking must already be checked_out)",
+                "operationId": "be37a1559085dbf6e3a7bbb25f31783f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "booking_id",
+                                    "user_id",
+                                    "rating"
+                                ],
+                                "properties": {
+                                    "booking_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "user_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    },
+                                    "comment": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Review"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Stay not completed yet, or validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reviews/{review}": {
+            "get": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Get a single review",
+                "operationId": "32dd0272eb2563323bc601e9f4fbe92c",
+                "parameters": [
+                    {
+                        "name": "review",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Review"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Update a review",
+                "operationId": "e55e0c0eacee635e105ba1de6a41e5ba",
+                "parameters": [
+                    {
+                        "name": "review",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    },
+                                    "comment": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Review"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Delete a review",
+                "operationId": "d0ad3c240942183a200135d74b77030b",
+                "parameters": [
+                    {
+                        "name": "review",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/rooms-type": {
+            "get": {
+                "tags": [
+                    "Room Types"
+                ],
+                "summary": "List room types (with images, amenities, prices loaded)",
+                "operationId": "31c4c74199286c6d12b47f7da5174ee0",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoomsType"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Room Types"
+                ],
+                "summary": "Create a room type",
+                "operationId": "1b17132d4c46ac8f4234862c4e90c666",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "capacity"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "capacity": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomsType"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/rooms-type/{roomsType}": {
+            "get": {
+                "tags": [
+                    "Room Types"
+                ],
+                "summary": "Get a single room type (with images, amenities, prices loaded)",
+                "operationId": "682c9459f8c55a52268f14d5ee5713cd",
+                "parameters": [
+                    {
+                        "name": "roomsType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomsType"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Room Types"
+                ],
+                "summary": "Update a room type",
+                "operationId": "66f1d16904b522df7a31b1b457138617",
+                "parameters": [
+                    {
+                        "name": "roomsType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "capacity": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomsType"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Room Types"
+                ],
+                "summary": "Delete a room type",
+                "operationId": "4e0b3b42c990ec0b1fabf8b37845914e",
+                "parameters": [
+                    {
+                        "name": "roomsType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/room-images": {
+            "get": {
+                "tags": [
+                    "Room Images"
+                ],
+                "summary": "List all room images",
+                "operationId": "71c38ff02d5ecfb34f91eff2f0328ac2",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoomImage"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Room Images"
+                ],
+                "summary": "Add an image to a room type",
+                "operationId": "a272b70e43246d98845f43bdebd2c0c3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_type_id",
+                                    "image_path"
+                                ],
+                                "properties": {
+                                    "room_type_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "image_path": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomImage"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/room-images/{roomImage}": {
+            "get": {
+                "tags": [
+                    "Room Images"
+                ],
+                "summary": "Get a single room image",
+                "operationId": "f1f4ed11ee125c3c34553fc29e25ac84",
+                "parameters": [
+                    {
+                        "name": "roomImage",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomImage"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Room Images"
+                ],
+                "summary": "Update a room image",
+                "operationId": "5b0efaf9dcf3d0af0cc7ba90acc45e04",
+                "parameters": [
+                    {
+                        "name": "roomImage",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "image_path": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomImage"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Room Images"
+                ],
+                "summary": "Delete a room image",
+                "operationId": "67d1d200b64df4cf99f6ae3a5ef58e3b",
+                "parameters": [
+                    {
+                        "name": "roomImage",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/rooms": {
+            "get": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "List all rooms (with room type loaded)",
+                "operationId": "eddbd876e08100925184854ae5910e7e",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Room"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Create a room",
+                "operationId": "47954faf788371335b8c23cf219ab1aa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_type_id",
+                                    "room_number"
+                                ],
+                                "properties": {
+                                    "room_type_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "room_number": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "available",
+                                            "occupied",
+                                            "cleaning",
+                                            "maintenance"
+                                        ]
+                                    },
+                                    "floor": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Room"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/rooms/{room}": {
+            "get": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Get a single room (with room type loaded)",
+                "operationId": "fb4d2c358b0779ac0a8dc153e4df9062",
+                "parameters": [
+                    {
+                        "name": "room",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Room"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Update a room",
+                "operationId": "fb219f44483654b597828288cc014aa4",
+                "parameters": [
+                    {
+                        "name": "room",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "room_number": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "available",
+                                            "occupied",
+                                            "cleaning",
+                                            "maintenance"
+                                        ]
+                                    },
+                                    "floor": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Room"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Delete a room",
+                "operationId": "6dff1b32fc92b7ae91276315e3ce5743",
+                "parameters": [
+                    {
+                        "name": "room",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/room-prices": {
+            "get": {
+                "tags": [
+                    "Room Prices"
+                ],
+                "summary": "List all room prices",
+                "operationId": "100fa16904019501cd84746ee381bde1",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoomPrice"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Room Prices"
+                ],
+                "summary": "Create a price period for a room type",
+                "operationId": "2be8862e3418762540e310b2d5ebe403",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_type_id",
+                                    "start_date",
+                                    "end_date",
+                                    "price_per_night"
+                                ],
+                                "properties": {
+                                    "room_type_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "price_per_night": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomPrice"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/room-prices/{roomPrice}": {
+            "get": {
+                "tags": [
+                    "Room Prices"
+                ],
+                "summary": "Get a single room price entry",
+                "operationId": "c2d741149fd32b19942af8cc4e2dc92e",
+                "parameters": [
+                    {
+                        "name": "roomPrice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomPrice"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Room Prices"
+                ],
+                "summary": "Update a room price entry",
+                "operationId": "1a44ccedbda41be0a9f0edeeb8941348",
+                "parameters": [
+                    {
+                        "name": "roomPrice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "price_per_night": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomPrice"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Room Prices"
+                ],
+                "summary": "Delete a room price entry",
+                "operationId": "f9eccc8a7f6e2f0fdd488b9266b9a044",
+                "parameters": [
+                    {
+                        "name": "roomPrice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/room-services": {
+            "get": {
+                "tags": [
+                    "Room Services"
+                ],
+                "summary": "List all room service orders (with booking + handledBy loaded)",
+                "operationId": "a6b9800f79b83f373ed16d8bef9d3736",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoomService"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Room Services"
+                ],
+                "summary": "Order a room service item (starts as \"pending\")",
+                "operationId": "f808ffcd76e20c507903e93b71123b26",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "booking_id",
+                                    "item_description",
+                                    "quantity",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "booking_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "handled_by": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "item_description": {
+                                        "type": "string"
+                                    },
+                                    "quantity": {
+                                        "type": "integer"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomService"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/room-services/{roomService}": {
+            "get": {
+                "tags": [
+                    "Room Services"
+                ],
+                "summary": "Get a single room service order",
+                "operationId": "819032e60290f49475d99e9c0eb16448",
+                "parameters": [
+                    {
+                        "name": "roomService",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomService"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Room Services"
+                ],
+                "summary": "Update a room service order",
+                "operationId": "8ca335b5d156c464ac9c54e1ae0da29d",
+                "parameters": [
+                    {
+                        "name": "roomService",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "item_description": {
+                                        "type": "string"
+                                    },
+                                    "quantity": {
+                                        "type": "integer"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomService"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Room Services"
+                ],
+                "summary": "Delete a room service order",
+                "operationId": "9e312425ca35d67abd33086428ecfc6a",
+                "parameters": [
+                    {
+                        "name": "roomService",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/room-services/{roomService}/status": {
+            "patch": {
+                "tags": [
+                    "Room Services"
+                ],
+                "summary": "Advance the order status: pending -> preparing -> delivered (or cancelled)",
+                "operationId": "d9ebab131034400bf5d43a1cb1ecafed",
+                "parameters": [
+                    {
+                        "name": "roomService",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "preparing",
+                                            "delivered",
+                                            "cancelled"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoomService"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bookings": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "List all bookings, newest first (with user + rooms loaded)",
+                "operationId": "c557e0d5da32f5ce7ba6d0970b38a5fa",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Booking"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Create a booking: checks room availability, then opens a Stripe Checkout Session for the deposit",
+                "description": "Rejects with 409 if any requested room overlaps an existing non-cancelled booking for the given dates. On success the booking is created with status \"pending\" and a Stripe payment_url is returned; the booking is only confirmed once the Stripe webhook receives the completed checkout session.",
+                "operationId": "9ce013a8555b889b0f78695e57c63cba",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_ids",
+                                    "check_in_date",
+                                    "check_out_date",
+                                    "deposit_amount"
+                                ],
+                                "properties": {
+                                    "room_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "check_in_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "check_out_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "deposit_amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "total_price": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "guests_count": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booking created, Stripe payment URL returned",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "booking": {
+                                            "$ref": "#/components/schemas/Booking"
+                                        },
+                                        "payment_url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "One or more rooms are not available for the requested dates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "unavailable_room_ids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "format": "uuid"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/bookings/{booking}": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get a single booking (with user, rooms, guests, actions, payments loaded)",
+                "operationId": "7e4ee6fa8ad6ca4b2a910fb97eb169e1",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Booking"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Update a booking",
+                "operationId": "97240544a7f8537964754f583748a1f3",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "check_in_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "check_out_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "confirmed",
+                                            "checked_in",
+                                            "checked_out",
+                                            "cancelled"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Booking"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Delete a booking",
+                "operationId": "8ae869c082ba29e585c30bbc21e260e2",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/bookings/{booking}/cancel": {
+            "post": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Cancel a pending/confirmed booking (refunds via Stripe if 2+ days before check-in)",
+                "operationId": "e0f9102c4267e1c6e87199db1c0b5519",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cancelled",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "booking": {
+                                            "$ref": "#/components/schemas/Booking"
+                                        },
+                                        "refunded": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Booking can no longer be cancelled"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stripe/webhook": {
+            "post": {
+                "tags": [
+                    "Stripe Webhook"
+                ],
+                "summary": "Stripe calls this when a checkout session completes; confirms the booking and records the deposit payment",
+                "description": "Verified using the Stripe-Signature header and the configured webhook secret. Not intended to be called manually.",
+                "operationId": "f4c667cbfd8f08f5b2ed7edcb3fd34fc",
+                "responses": {
+                    "200": {
+                        "description": "Event processed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "received": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid webhook payload/signature"
+                    }
+                }
+            }
+        },
+        "/api/guests": {
+            "get": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "List all guests",
+                "operationId": "6d052faaaa87ed54626535910fdeab9f",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Guest"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Add a guest to a booking",
+                "operationId": "7cc56e3f706b3988ea8c7672dc9e79b8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "booking_id",
+                                    "full_name"
+                                ],
+                                "properties": {
+                                    "booking_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "full_name": {
+                                        "type": "string"
+                                    },
+                                    "id_document_type": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "id_document_number": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Guest"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/guests/{guest}": {
+            "get": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Get a single guest",
+                "operationId": "212fcb3b541d2580b50fedbaf7ef95ea",
+                "parameters": [
+                    {
+                        "name": "guest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Guest"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Update a guest",
+                "operationId": "938f02d0b24528e6b954941669bc462d",
+                "parameters": [
+                    {
+                        "name": "guest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "full_name": {
+                                        "type": "string"
+                                    },
+                                    "id_document_type": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "id_document_number": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Guest"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Delete a guest",
+                "operationId": "e594c025bcb3644eb46b5cb0561c939e",
+                "parameters": [
+                    {
+                        "name": "guest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/booking-actions": {
+            "get": {
+                "tags": [
+                    "Booking Actions"
+                ],
+                "summary": "List all booking actions (with booking + performedBy loaded)",
+                "operationId": "c99aac12a4d1cc8e713e16d4bade694b",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/BookingAction"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Booking Actions"
+                ],
+                "summary": "Log a booking action",
+                "operationId": "0761dfc3b3075e808e3883c60304cce3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "booking_id",
+                                    "action_type"
+                                ],
+                                "properties": {
+                                    "booking_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "action_type": {
+                                        "type": "string"
+                                    },
+                                    "performed_by": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookingAction"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/booking-actions/{bookingAction}": {
+            "get": {
+                "tags": [
+                    "Booking Actions"
+                ],
+                "summary": "Get a single booking action",
+                "operationId": "67370d7c1cf94eec9686a16d8016ff5c",
+                "parameters": [
+                    {
+                        "name": "bookingAction",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookingAction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Booking Actions"
+                ],
+                "summary": "Update a booking action",
+                "operationId": "4e39a9e3c3385caf299d23cf573e9595",
+                "parameters": [
+                    {
+                        "name": "bookingAction",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "action_type": {
+                                        "type": "string"
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookingAction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Booking Actions"
+                ],
+                "summary": "Delete a booking action",
+                "operationId": "69439db9601175affa2fe459888e96ee",
+                "parameters": [
+                    {
+                        "name": "bookingAction",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/payments": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "List all payments",
+                "operationId": "adf75bd0beabe962edaa0bd4951115b8",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Payment"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Record a payment",
+                "operationId": "416f44a3755b3037c8055a4dedd53c1d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "booking_id",
+                                    "amount",
+                                    "type",
+                                    "method"
+                                ],
+                                "properties": {
+                                    "booking_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "invoice_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "deposit",
+                                            "refund",
+                                            "balance"
+                                        ]
+                                    },
+                                    "method": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/payments/{payment}": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Get a single payment",
+                "operationId": "d20254d914028af9789f9d7bbee11186",
+                "parameters": [
+                    {
+                        "name": "payment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Update a payment",
+                "operationId": "68299aab5f70016d588be4875f3e3d98",
+                "parameters": [
+                    {
+                        "name": "payment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "deposit",
+                                            "refund",
+                                            "balance"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Delete a payment",
+                "operationId": "20f6589d15546cc0af68b75976fbfb7e",
+                "parameters": [
+                    {
+                        "name": "payment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/housekeeping": {
+            "get": {
+                "tags": [
+                    "Housekeeping"
+                ],
+                "summary": "List housekeeping tasks, ordered by start time (with room + staff loaded)",
+                "operationId": "441ce35b12f56f33ca1c904e20d05213",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Housekeeping"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Housekeeping"
+                ],
+                "summary": "Start a housekeeping task (room status becomes \"cleaning\")",
+                "operationId": "8f34b5f77cfc5c6b0392f5c2479305cc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_id",
+                                    "staff_id"
+                                ],
+                                "properties": {
+                                    "room_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "staff_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "started_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Housekeeping"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/housekeeping/{housekeeping}": {
+            "get": {
+                "tags": [
+                    "Housekeeping"
+                ],
+                "summary": "Get a single housekeeping task",
+                "operationId": "f96f5252c30801e338ee3d3fe567b244",
+                "parameters": [
+                    {
+                        "name": "housekeeping",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Housekeeping"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Housekeeping"
+                ],
+                "summary": "Update a housekeeping task",
+                "operationId": "eba41ef714e0bde9657f6d852b677a61",
+                "parameters": [
+                    {
+                        "name": "housekeeping",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Housekeeping"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Housekeeping"
+                ],
+                "summary": "Delete a housekeeping task",
+                "operationId": "15442dba504f6ca48a868a97a262f2c7",
+                "parameters": [
+                    {
+                        "name": "housekeeping",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/housekeeping/{housekeeping}/finish": {
+            "patch": {
+                "tags": [
+                    "Housekeeping"
+                ],
+                "summary": "Finish a housekeeping task (room status becomes \"available\")",
+                "operationId": "ef84e06e43dfd57c708b9495999a8000",
+                "parameters": [
+                    {
+                        "name": "housekeeping",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Finished",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Housekeeping"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maintenance-reports": {
+            "get": {
+                "tags": [
+                    "Maintenance Reports"
+                ],
+                "summary": "List maintenance reports (with room, reportedBy, resolvedBy loaded)",
+                "operationId": "a580575cc6d5546abc915400238320da",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MaintenanceReport"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Maintenance Reports"
+                ],
+                "summary": "Report an issue (room status becomes \"maintenance\")",
+                "operationId": "9d76e8e0a728fa6fd7f3f663cd5c7836",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_id",
+                                    "reported_by",
+                                    "issue_description",
+                                    "severity"
+                                ],
+                                "properties": {
+                                    "room_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "reported_by": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "issue_description": {
+                                        "type": "string"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "enum": [
+                                            "open",
+                                            "resolved"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MaintenanceReport"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maintenance-reports/{maintenanceReport}": {
+            "get": {
+                "tags": [
+                    "Maintenance Reports"
+                ],
+                "summary": "Get a single maintenance report",
+                "operationId": "4bf75aabf0a4cf6560c7b08aaee10238",
+                "parameters": [
+                    {
+                        "name": "maintenanceReport",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MaintenanceReport"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Maintenance Reports"
+                ],
+                "summary": "Update a maintenance report",
+                "operationId": "de89b981f20c539bf6987fd82e89386b",
+                "parameters": [
+                    {
+                        "name": "maintenanceReport",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "issue_description": {
+                                        "type": "string"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MaintenanceReport"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Maintenance Reports"
+                ],
+                "summary": "Delete a maintenance report",
+                "operationId": "0d5bee05bfbc5466499b7b06d9753017",
+                "parameters": [
+                    {
+                        "name": "maintenanceReport",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/maintenance-reports/{maintenanceReport}/resolve": {
+            "patch": {
+                "tags": [
+                    "Maintenance Reports"
+                ],
+                "summary": "Resolve a maintenance report (room status becomes \"available\")",
+                "operationId": "708b0562eb638bfb17d1f471f1dd534e",
+                "parameters": [
+                    {
+                        "name": "maintenanceReport",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "resolved_by": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Resolved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MaintenanceReport"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/lost-found-items": {
+            "get": {
+                "tags": [
+                    "Lost & Found"
+                ],
+                "summary": "List lost & found items (with room + foundBy loaded)",
+                "operationId": "4b2570706fc0f147e69a7240e73e1181",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LostFoundItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Lost & Found"
+                ],
+                "summary": "Log a found item",
+                "operationId": "1c98f224a0a9bd5b33e0f30c48315392",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_id",
+                                    "found_by",
+                                    "item_description"
+                                ],
+                                "properties": {
+                                    "room_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "found_by": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "item_description": {
+                                        "type": "string"
+                                    },
+                                    "storage_location": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "found_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LostFoundItem"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/lost-found-items/{lostFoundItem}": {
+            "get": {
+                "tags": [
+                    "Lost & Found"
+                ],
+                "summary": "Get a single lost & found item",
+                "operationId": "66489274cf2de70a78ae73bfde569881",
+                "parameters": [
+                    {
+                        "name": "lostFoundItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LostFoundItem"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Lost & Found"
+                ],
+                "summary": "Update a lost & found item (e.g. mark returned)",
+                "operationId": "4a431eec76ba489ad4938b2cef7a05a7",
+                "parameters": [
+                    {
+                        "name": "lostFoundItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "returned_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LostFoundItem"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Lost & Found"
+                ],
+                "summary": "Delete a lost & found item",
+                "operationId": "f574fe76d01d5a7ec5adcd50f08a58be",
+                "parameters": [
+                    {
+                        "name": "lostFoundItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/staff-schedules": {
+            "get": {
+                "tags": [
+                    "Staff Schedules"
+                ],
+                "summary": "List all staff schedules (with user loaded)",
+                "operationId": "5dc2ad47e1fa9589823dbc2f1c7d59ba",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/StaffSchedule"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Staff Schedules"
+                ],
+                "summary": "Create a staff shift",
+                "operationId": "e28716f16efd6e6cd278bf1941cc7be4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "shift_date",
+                                    "shift_start",
+                                    "shift_end"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "shift_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "shift_start": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "shift_end": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StaffSchedule"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/staff-schedules/{staffSchedule}": {
+            "get": {
+                "tags": [
+                    "Staff Schedules"
+                ],
+                "summary": "Get a single staff schedule",
+                "operationId": "b19730d028ede6d4801c064bbdf3abcf",
+                "parameters": [
+                    {
+                        "name": "staffSchedule",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StaffSchedule"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Staff Schedules"
+                ],
+                "summary": "Update a staff schedule",
+                "operationId": "c510eb4ce97843a6f4c16b18e9ffb15e",
+                "parameters": [
+                    {
+                        "name": "staffSchedule",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "shift_start": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "shift_end": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StaffSchedule"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Staff Schedules"
+                ],
+                "summary": "Delete a staff schedule",
+                "operationId": "a47d30eaa4e7e75b09db855ecb3e2021",
+                "parameters": [
+                    {
+                        "name": "staffSchedule",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
+            }
+        },
+        "/api/reports/rooms/{room}/bookings": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Report 1: bookings of a room within a date period",
+                "operationId": "28b23c192dd1661178aedc68aab863f0",
+                "parameters": [
+                    {
+                        "name": "room",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "room": {
+                                            "type": "object"
+                                        },
+                                        "period": {
+                                            "type": "object"
+                                        },
+                                        "bookings_count": {
+                                            "type": "integer"
+                                        },
+                                        "bookings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (missing/invalid from-to)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/customers/{user}/invoices": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Report 2: all invoices of a customer, plus their booking count",
+                "operationId": "0b335fa764ef3de7b376132cc1eacc97",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "customer": {
+                                            "type": "object"
+                                        },
+                                        "bookings_count": {
+                                            "type": "integer"
+                                        },
+                                        "invoices_count": {
+                                            "type": "integer"
+                                        },
+                                        "invoices": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/most-requested-rooms": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Report 3: rooms ordered by number of bookings, most requested first",
+                "operationId": "0e0e72cde2ec6bba381c668e90c8bee7",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "rooms": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ValidationError": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "The given data was invalid."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": {
+                            "field": [
+                                "The field is required."
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Amenity": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Free WiFi"
+                    }
+                },
+                "type": "object"
+            },
+            "Role": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "receptionist"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Permission"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Permission": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "manage-bookings"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "role_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "full_name": {
+                        "type": "string",
+                        "example": "Rojin Mohammad"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "0999999999"
+                    },
+                    "email_verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Invoice": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "booking_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_charge": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "services_charge": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "total_amount": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "issued_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Review": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "booking_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "comment": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RoomsType": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Deluxe Double"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "example": 2
+                    }
+                },
+                "type": "object"
+            },
+            "RoomImage": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_type_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "image_path": {
+                        "type": "string",
+                        "example": "room-types/deluxe-1.jpg"
+                    }
+                },
+                "type": "object"
+            },
+            "Room": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_type_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_number": {
+                        "type": "string",
+                        "example": "101"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "available",
+                            "occupied",
+                            "cleaning",
+                            "maintenance"
+                        ]
+                    },
+                    "floor": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "RoomPrice": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_type_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "price_per_night": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 89.99
+                    }
+                },
+                "type": "object"
+            },
+            "RoomService": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "booking_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "handled_by": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "item_description": {
+                        "type": "string",
+                        "example": "Club sandwich + orange juice"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "preparing",
+                            "delivered",
+                            "cancelled"
+                        ]
+                    },
+                    "ordered_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "delivered_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Booking": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "check_in_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "check_out_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "confirmed",
+                            "checked_in",
+                            "checked_out",
+                            "cancelled"
+                        ]
+                    },
+                    "total_price": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "deposit_amount": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "id_document_type": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "id_document_number": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "guests_count": {
+                        "type": "integer",
+                        "example": 2
+                    }
+                },
+                "type": "object"
+            },
+            "Guest": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "booking_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "full_name": {
+                        "type": "string"
+                    },
+                    "id_document_type": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "id_document_number": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "BookingAction": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "booking_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "action_type": {
+                        "type": "string",
+                        "example": "cancelled"
+                    },
+                    "performed_by": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "reason": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "performed_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Payment": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "booking_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "invoice_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "deposit",
+                            "refund",
+                            "balance"
+                        ]
+                    },
+                    "method": {
+                        "type": "string",
+                        "example": "card"
+                    },
+                    "stripe_payment_intent_id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "paid_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Housekeeping": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "staff_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MaintenanceReport": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "reported_by": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "issue_description": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "string",
+                        "example": "medium"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "resolved"
+                        ]
+                    },
+                    "resolved_by": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "reported_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "resolved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LostFoundItem": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "room_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "found_by": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "item_description": {
+                        "type": "string"
+                    },
+                    "storage_location": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "stored"
+                    },
+                    "found_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "returned_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StaffSchedule": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "shift_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "shift_start": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "shift_end": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "scheduled"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "JWT access token. Send as: Authorization: Bearer {token}",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Amenities",
+            "description": "Amenities"
+        },
+        {
+            "name": "Roles",
+            "description": "Roles"
+        },
+        {
+            "name": "Permissions",
+            "description": "Permissions"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
+        },
+        {
+            "name": "Invoices",
+            "description": "Invoices"
+        },
+        {
+            "name": "Reviews",
+            "description": "Reviews"
+        },
+        {
+            "name": "Room Types",
+            "description": "Room Types"
+        },
+        {
+            "name": "Room Images",
+            "description": "Room Images"
+        },
+        {
+            "name": "Rooms",
+            "description": "Rooms"
+        },
+        {
+            "name": "Room Prices",
+            "description": "Room Prices"
+        },
+        {
+            "name": "Room Services",
+            "description": "Room Services"
+        },
+        {
+            "name": "Bookings",
+            "description": "Bookings"
+        },
+        {
+            "name": "Stripe Webhook",
+            "description": "Stripe Webhook"
+        },
+        {
+            "name": "Guests",
+            "description": "Guests"
+        },
+        {
+            "name": "Booking Actions",
+            "description": "Booking Actions"
+        },
+        {
+            "name": "Payments",
+            "description": "Payments"
+        },
+        {
+            "name": "Housekeeping",
+            "description": "Housekeeping"
+        },
+        {
+            "name": "Maintenance Reports",
+            "description": "Maintenance Reports"
+        },
+        {
+            "name": "Lost & Found",
+            "description": "Lost & Found"
+        },
+        {
+            "name": "Staff Schedules",
+            "description": "Staff Schedules"
+        },
+        {
+            "name": "Reports",
+            "description": "Reports"
+        }
+    ]
+}

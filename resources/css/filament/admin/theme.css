@@ -1,0 +1,113 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+/* Page */
+.fi-body,
+.fi-main {
+    background-color: #F6F1E8;
+}
+
+/* Sidebar */
+.fi-sidebar,
+.fi-sidebar-header {
+    background-color: #263746;
+}
+
+/* Sidebar text */
+.fi-sidebar-item-label,
+.fi-sidebar-group-label {
+    color: #F6F1E8;
+}
+
+/* Sidebar hover */
+.fi-sidebar-item:hover {
+    background-color: #344B5D;
+}
+
+/* Active */
+.fi-sidebar-item-active,
+.fi-sidebar-item.fi-active,
+.fi-sidebar-item[aria-current="page"] {
+    background-color: #9B8055;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-label,
+.fi-sidebar-item-active svg,
+.fi-sidebar-item.fi-active .fi-sidebar-item-label,
+.fi-sidebar-item.fi-active svg,
+.fi-sidebar-item[aria-current="page"] .fi-sidebar-item-label,
+.fi-sidebar-item[aria-current="page"] svg {
+    color: #263746 !important;
+}
+
+/* Topbar */
+.fi-topbar {
+    background-color: #FFFDF8;
+    border-bottom-color: #E5DDD0;
+}
+
+/* hover */
+
+
+
+.booking-hover-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 6px 10px;
+
+    color: white !important;
+    background: #1e3a5f !important;
+
+    border-radius: 7px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.booking-hover-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.booking-hover-card {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 9999;
+    min-width: 220px;
+
+    background: #FFFDF8;
+    border: 1px solid #E5DDD0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.booking-hover-wrapper:hover .booking-hover-card {
+    display: block;          /* بيظهر بس لما تعمل hover عالـ wrapper */
+}
+
+.booking-detail {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.booking-label {
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.fi-ta-table,
+.fi-ta-content,
+.fi-ta-ctn {
+    overflow: visible !important;
+}
+
