@@ -1,58 +1,176 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hotel Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A full-featured hotel management system built with **Laravel**, covering the complete guest journey — from room browsing and booking to payment, check-in/check-out, and post-stay reviews — alongside an internal admin panel for staff operations (housekeeping, maintenance, room service, and reporting).
 
-## About Laravel
+This project was built as a graduation capstone project, designed and implemented incrementally: database design (ERD) → migrations → models → factories/seeders → API layer → business logic.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Key Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Guest-Facing
+- **Room browsing & booking** with real-time availability checks across date ranges
+- **Multi-room bookings** — a single reservation can include one or several rooms
+- **Secure payments via Stripe**, including deposit collection and webhook-based confirmation
+- **Cancellation policy** — automatic refund eligibility based on how close the cancellation is to check-in
+- **Room service requests** with a full order lifecycle (pending → preparing → delivered)
+- **Guest reviews** for completed stays
+- **OTP-based authentication** — email verification codes for registration, login, and password reset (no password-only login)
 
-## Learning Laravel
+### Staff / Admin (Filament Panel)
+- **Booking management** — confirm, reject, check-in, check-out
+- **Housekeeping workflow** — room cleaning status tracking (cleaning → available)
+- **Maintenance reports** — issue tracking with severity levels and automatic room status updates
+- **Lost & found** item logging
+- **Staff scheduling**
+- **Invoicing** — auto-generated from room charges and service charges
+- **Reporting dashboards**: monthly revenue, cancellation rate, most-requested rooms, upcoming check-ins, staff performance, and more
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Access Control
+- **Role-based permissions** (roles, permissions, role-permission mapping)
+- **JWT-secured API** for all authenticated actions
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 🛠️ Tech Stack
 
-## Agentic Development
+| Layer | Technology |
+|---|---|
+| Framework | Laravel |
+| Authentication | JWT (`tymon/jwt-auth`) + Email OTP verification |
+| Admin Panel | Filament |
+| Payments | Stripe (Payment Intents + Webhooks) |
+| API Documentation | L5-Swagger (OpenAPI) |
+| Database | MySQL |
+| Frontend (guest-facing) | Blade templates |
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
+
+## 🗄️ Database Design
+
+The system is modeled around 22 relational tables, including:
+
+- **Core booking flow:** `bookings`, `booking_rooms` (many-to-many), `guests`, `booking_actions`
+- **Hotel inventory:** `rooms`, `rooms_types`, `room_prices`, `room_images`, `amenities`
+- **Payments & billing:** `payments`, `invoices`
+- **Operations:** `housekeeping`, `maintenance_reports`, `lost_found_items`, `room_service`, `staff_schedule`
+- **Access control:** `roles`, `permissions`, `role_has_permissions`, `users`
+- **Feedback:** `reviews`
+
+Key design decisions:
+- Bookings support **multiple rooms per reservation** via a pivot table
+- Room availability is derived from **date-range overlap checks** against active bookings, not a static room status flag
+- Pricing is **date-sensitive** (`room_prices` supports different rates per period)
+- UUIDs are used as primary keys across all tables
+
+---
+
+## 🔐 Authentication Flow
+
+1. **Register** → account created → OTP sent to email
+2. **Verify OTP** → email marked as verified
+3. **Login** (email + password) → OTP sent again for 2-factor verification
+4. **Verify Login OTP** → JWT token issued
+5. **Forgot Password** → OTP sent → **Reset Password** with OTP verification
+
+All authentication endpoints are rate-limited to prevent abuse.
+
+---
+
+## 💳 Booking & Payment Flow
+
+1. Guest selects one or more rooms and a date range
+2. System checks availability (no overlapping active bookings for the selected rooms/dates)
+3. If available, guest proceeds to payment and pays a **deposit** via Stripe
+4. Stripe webhook confirms payment → booking status becomes `confirmed`
+5. **Cancellation:**
+   - ≥ 2 days before check-in → booking cancelled **with deposit refund**
+   - < 2 days before check-in → booking cancelled **without refund**
+6. On check-in/check-out, room status updates accordingly, triggering housekeeping workflows
+
+---
+
+## 📡 API Overview
+
+All API routes are prefixed and grouped under `api.*`, with JWT-protected resources for bookings, payments, staff operations, and administrative resources. Key resource groups:
+
+- `POST /register`, `/verify-otp`, `/login`, `/verify-login-otp`, `/forgot-password`, `/reset-password`
+- `GET|POST /bookings`, `POST /bookings/{booking}/cancel`
+- `POST /stripe/webhook`
+- `GET|PATCH /room-services`, `PATCH /room-services/{id}/status`
+- `GET|PATCH /housekeeping`, `PATCH /housekeeping/{id}/finish`
+- `GET|PATCH /maintenance-reports`, `PATCH /maintenance-reports/{id}/resolve`
+- `GET /reports/rooms/{room}/bookings`
+- `GET /reports/customers/{user}/invoices`
+- `GET /reports/most-requested-rooms`
+
+Full interactive API documentation is available via Swagger (L5-Swagger) once the project is running, at `/api/documentation`.
+
+---
+
+## 🚀 Installation
 
 ```bash
-composer require laravel/boost --dev
+# Clone the repository
+git clone https://github.com/roj99/Hotel-Management-System.git
+cd Hotel-Management-System
 
-php artisan boost:install
+# Install PHP dependencies
+composer install
+
+# Install JS dependencies
+npm install
+
+# Environment setup
+cp .env.example .env
+php artisan key:generate
+php artisan jwt:secret
+
+# Configure your database and Stripe keys in .env, then run:
+php artisan migrate --seed
+
+# Build frontend assets
+npm run build
+
+# Serve the application
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Required `.env` values
+```
+DB_CONNECTION=mysql
+DB_DATABASE=...
+DB_USERNAME=...
+DB_PASSWORD=...
 
-## Contributing
+STRIPE_SECRET=...
+STRIPE_WEBHOOK_SECRET=...
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+MAIL_MAILER=...   # required for sending OTP emails
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 📁 Project Structure
 
-## Security Vulnerabilities
+```
+app/
+├── Http/
+│   ├── Controllers/Api/       # API controllers (Booking, Hotel, Staff, root-level)
+│   ├── Requests/              # Form request validation, grouped by domain
+│   └── Resources/             # API resource transformers
+├── Models/                    # Eloquent models, grouped by domain (Booking, Hotel, Staff)
+├── Filament/                  # Admin panel resources, pages, and widgets
+└── Policies/                  # Authorization policies per model
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+database/
+├── migrations/
+├── factories/                 # Grouped by domain
+└── seeders/                   # Grouped by domain, with realistic linked data
+```
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 📄 License
+
+This project was developed for educational purposes as a graduation capstone project.
